@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: strata-frontend
+    env: static
+    buildCommand: echo "No build needed"
+    staticPublishPath: .
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
