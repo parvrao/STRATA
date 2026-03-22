@@ -1,7 +1,3 @@
-"""
-Alembic environment — async SQLAlchemy support.
-"""
-
 import asyncio
 from logging.config import fileConfig
 from sqlalchemy import pool
@@ -14,13 +10,16 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from database import Base
-import models  # noqa — ensure all models are imported so Alembic sees them
+import models  # noqa
 
 config = context.config
 
-# Override sqlalchemy.url from environment
 db_url = os.environ.get("DATABASE_URL", "")
 if db_url:
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif db_url.startswith("postgresql://") and "+asyncpg" not in db_url:
+        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
     config.set_main_option("sqlalchemy.url", db_url)
 
 if config.config_file_name is not None:
