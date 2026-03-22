@@ -2487,9 +2487,18 @@ let qCurrent = 0;
 
 function openQuiz() {
   qAnswers = { s: 0, g: 0, e: 0 }; qCurrent = 0;
-  document.querySelectorAll('.qq').forEach((q, i) => { q.classList.toggle('on', i === 0); });
-  document.getElementById('q-res').classList.remove('on');
-  document.querySelector('.qpfill').style.width = '0%';
+
+  // Reset all questions
+  document.getElementById('quiz-qs').style.display = 'block';
+  document.querySelectorAll('#quiz-qs .qq').forEach((q, i) => {
+    q.style.display = i === 0 ? 'block' : 'none';
+  });
+
+  // Hide result
+  const res = document.getElementById('q-res');
+  res.style.display = 'none';
+
+  document.getElementById('qfill').style.width = '0%';
   document.getElementById('qlbl').textContent = '1/5';
   document.getElementById('quiz').classList.add('open');
 }
@@ -2497,29 +2506,60 @@ function closeQuiz() { document.getElementById('quiz').classList.remove('open');
 
 function qa(el, qIdx, stage) {
   el.parentElement.querySelectorAll('.qo').forEach(o => o.classList.remove('sel'));
-  el.classList.add('sel'); el.querySelector('.qdot').style.background = 'var(--tl)';
+  el.classList.add('sel');
+  el.querySelector('.qdot').style.background = 'var(--tl)';
   qAnswers[stage] = (qAnswers[stage] || 0) + 1;
+
   setTimeout(() => {
     qCurrent++;
+    const qqEls = document.querySelectorAll('#quiz-qs .qq');
+
     if (qCurrent < 5) {
-      document.querySelectorAll('.qq').forEach((q, i) => q.classList.toggle('on', i === qCurrent));
+      // Show next question
+      qqEls.forEach((q, i) => {
+        q.style.display = i === qCurrent ? 'block' : 'none';
+      });
       document.getElementById('qfill').style.width = (qCurrent * 20) + '%';
       document.getElementById('qlbl').textContent = (qCurrent + 1) + '/5';
     } else {
-      document.querySelectorAll('.qq').forEach(q => q.classList.remove('on'));
+      // All questions answered — show result
+      qqEls.forEach(q => q.style.display = 'none');
+      document.getElementById('quiz-qs').style.display = 'none';
+
       const winner = Object.entries(qAnswers).sort((a,b) => b[1]-a[1])[0][0];
-      const names = { s: '🚀 Startup Mode', g: '📈 Growth Stage', e: '🏛️ Enterprise' };
-      const descs = { s: 'Based on your answers, you\'re at an early stage — focused on finding your real customer and validating your market before scaling.', g: 'You have traction. You\'re ready to cross the chasm, fix unit economics, and build the GTM engine that scales.', e: 'You\'re operating at portfolio scale. You need BCG-grade analysis, VRIO moat scoring, and board-ready strategic intelligence.' };
-      document.getElementById('qri').textContent = winner === 's' ? '🚀' : winner === 'g' ? '📈' : '🏛️';
-      document.getElementById('qrs').textContent = names[winner];
-      document.getElementById('qrd').textContent = descs[winner];
-      document.getElementById('qrb').onclick = () => { closeQuiz(); enterStage(winner === 's' ? 'startup' : winner === 'g' ? 'growth' : 'enterprise'); };
-      document.getElementById('q-res').classList.add('on');
+      const names  = { s: '🚀 Startup Mode', g: '📈 Growth Stage', e: '🏛️ Enterprise' };
+      const descs  = {
+        s: "Based on your answers, you're at an early stage — focused on finding your real customer and validating your market before scaling.",
+        g: "You have traction. You're ready to cross the chasm, fix unit economics, and build the GTM engine that scales.",
+        e: "You're operating at portfolio scale. You need BCG-grade analysis, VRIO moat scoring, and board-ready strategic intelligence."
+      };
+      const emojis = { s: '🚀', g: '📈', e: '🏛️' };
+
+      document.getElementById('qri').textContent  = emojis[winner];
+      document.getElementById('qrs').textContent  = names[winner];
+      document.getElementById('qrd').textContent  = descs[winner];
       document.getElementById('qfill').style.width = '100%';
+      document.getElementById('qlbl').textContent  = '5/5';
+
+      const res = document.getElementById('q-res');
+      res.style.display       = 'block';
+      res.style.padding       = '32px 0';
+      res.style.textAlign     = 'center';
+
+      document.getElementById('qrb').onclick = () => {
+        closeQuiz();
+        const stageMap = { s: 'startup', g: 'growth', e: 'enterprise' };
+        enterStage(stageMap[winner]);
+      };
     }
   }, 350);
 }
-function enterFromQuiz() { document.getElementById('qrb').click(); }
+
+function enterFromQuiz() { 
+  const btn = document.getElementById('qrb');
+  if (btn && btn.onclick) btn.click();
+  else closeQuiz();
+}
 
 // ── PMF ──
 function updatePMF(v) {
